@@ -40,7 +40,7 @@ def get_db():
 def home():
 
     return {
-        "message": "FastAPI chal raha hai"
+        "message": "FastAPI is  runnning .."
     }
 
 
