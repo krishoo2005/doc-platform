@@ -1,21 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 import os
-
+import uuid
+from services.ai_service import extract_text_from_pdf, ask_ai
 from database import engine, Base, SessionLocal
 from models import User, Document
 from auth.jwt_handler import create_access_token, get_current_user
-
-from schemas import (
-    UserCreate,
-    UserResponse,
-    LoginRequest
-)
-
-from auth.hashing import (
-    hash_password,
-    verify_password
-)
+from schemas import UserCreate, UserResponse, LoginRequest
+from auth.hashing import hash_password, verify_password
 
 Base.metadata.create_all(bind=engine)
 
@@ -38,7 +30,7 @@ def home():
     return {"message": "FastAPI is running .."}
 
 
-@app.post("/users", response_model=UserResponse)
+@app.post("/users", response_model=UserResponse, status_code=201)
 def create_user(
     user: UserCreate,
     db: Session = Depends(get_db)
@@ -109,7 +101,10 @@ def get_me(current_user: str = Depends(get_current_user)):
 
 
 @app.get("/users")
-def get_users(db: Session = Depends(get_db)):
+def get_users(
+    db: Session = Depends(get_db),
+    current_user: str = Depends(get_current_user)
+):
     users = db.query(User).all()
     return users
 
@@ -130,13 +125,14 @@ def upload_file(
             detail="File too large. Maximum size is 10MB"
         )
 
-    if not file.filename.endswith(".pdf"):
+    if file.content_type != "application/pdf":
         raise HTTPException(
             status_code=400,
             detail="Only PDF files allowed"
         )
 
-    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    unique_filename = f"{uuid.uuid4()}_{file.filename}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
     with open(file_path, "wb") as buffer:
         buffer.write(contents)
@@ -160,3 +156,8 @@ def upload_file(
         "filename": new_doc.filename,
         "uploaded_at": new_doc.uploaded_at
     }
+
+@app.get("/test-ai")
+def test_ai():
+    result = ask_ai("Python is a programming language.", "What is Python?")
+    return {"response": result}
