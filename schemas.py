@@ -15,4 +15,8 @@ class UserResponse(BaseModel):
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str        
+    password: str   
+
+class ChatRequest(BaseModel):
+    document_id: int
+    question: str         

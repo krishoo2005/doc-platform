@@ -20,9 +20,9 @@ def extract_text_from_pdf(file_path: str) -> str:
 def ask_ai(document_text: str, question: str) -> str:
     prompt = f"""
     You are a document assistant.
-    Read the document below and answer the question.
-    Answer only based on the document content.
-    If the answer is not in the document, say "I don't know".
+    Read the document below and answer the question as best as you can.
+    If the exact information is not in the document, use your reasoning to infer the answer or use what is available to give a helpful answer.
+    If truely nothing relevant is found, say "I don't know".
 
     Document:
     {document_text}
@@ -31,7 +31,7 @@ def ask_ai(document_text: str, question: str) -> str:
     """
 
     response = client.models.generate_content(
-        model="gemini-1.5-flash-8b",
+        model="gemini-2.5-flash",
         contents=prompt
     )
     return response.text
