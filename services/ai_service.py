@@ -35,3 +35,23 @@ def ask_ai(document_text: str, question: str) -> str:
         contents=prompt
     )
     return response.text
+
+
+def analyze_resume(document_text: str) -> str:
+    prompt = f"""
+    You are an expert resume reviewer and ATS specialist.
+    Analyze the resume below and provide:
+    1. ATS Score out of 100
+    2. Key strengths
+    3. Missing sections or weaknesses
+    4. Specific skills to add to make resume stronger
+    5. Overall recommendation
+
+    Resume:
+    {document_text}
+    """
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt
+    )
+    return response.text

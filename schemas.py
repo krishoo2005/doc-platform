@@ -20,3 +20,6 @@ class LoginRequest(BaseModel):
 class ChatRequest(BaseModel):
     document_id: int
     question: str         
+
+class ResumeAnalyzeRequest(BaseModel):
+    document_id: int   

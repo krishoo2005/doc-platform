@@ -2,11 +2,11 @@ from fastapi import FastAPI, Depends, HTTPException, File, UploadFile
 from sqlalchemy.orm import Session
 import os
 import uuid
-from services.ai_service import extract_text_from_pdf, ask_ai
+from services.ai_service import extract_text_from_pdf, ask_ai, analyze_resume
 from database import engine, Base, SessionLocal
 from models import User, Document
 from auth.jwt_handler import create_access_token, get_current_user
-from schemas import UserCreate, UserResponse, LoginRequest,ChatRequest
+from schemas import UserCreate, UserResponse, LoginRequest,ChatRequest,ResumeAnalyzeRequest
 from auth.hashing import hash_password, verify_password
 
 Base.metadata.create_all(bind=engine)
@@ -178,5 +178,28 @@ def chat_with_document(
         text = extract_text_from_pdf(document.file_path)
         answer = ask_ai(text, request.question)
         return {"answer": answer}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
+@app.post("/analyze-resume")
+def analyze_resume_endpoint(
+    request: ResumeAnalyzeRequest,
+    current_user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    document = db.query(Document).filter(
+        Document.id == request.document_id
+    ).first()
+
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    user = db.query(User).filter(User.email == current_user).first()
+    if document.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    try:
+        text = extract_text_from_pdf(document.file_path)
+        analysis = analyze_resume(text)
+        return {"analysis": analysis}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
