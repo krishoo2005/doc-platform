@@ -12,8 +12,6 @@ from auth.jwt_handler import create_access_token, get_current_user
 from schemas import UserCreate, UserResponse, LoginRequest, ChatRequest, ResumeAnalyzeRequest
 from auth.hashing import hash_password, verify_password
 
-Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -22,7 +20,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 UPLOAD_DIR = "uploaded_files"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-
 def get_db():
     db = SessionLocal()
     try:
@@ -30,11 +27,9 @@ def get_db():
     finally:
         db.close()
 
-
 @app.get("/")
 def home():
     return {"message": "FastAPI is running .."}
-
 
 @app.post("/users", response_model=UserResponse, status_code=201)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
